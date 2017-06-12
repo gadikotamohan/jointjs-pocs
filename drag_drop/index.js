@@ -3,7 +3,6 @@ window.redoStack = []
 window.lastKnownState  = null
 $(document).on('keydown', function(event){
   if(event.ctrlKey && event.keyCode == 90) { 
-    console.log("Hey! Ctrl+Z event captured!");
     var json = undoStack.pop();
     if(json != null){
       redoStack.push(json);
@@ -13,11 +12,9 @@ $(document).on('keydown', function(event){
     return false;
   }
   if(event.ctrlKey && event.keyCode == 89) { 
-    console.log("Hey! Ctrl+Y event captured!");
     event.preventDefault(); 
     var json = redoStack.pop();
     if(json != null){
-      debugger;
       undoStack.push(json);
       graph.fromJSON(json);
     }
@@ -48,7 +45,6 @@ graph.on('change:position', function(cell){
     });
     var c = cell.clone();
     c.attributes = cell.previousAttributes();
-    c.id = cell.previousAttributes().id;
     cells.push(c);
     undoStack.push({cells: cells.map(function(e){ return e.toJSON(); })});    
   }, 100);
@@ -56,20 +52,20 @@ graph.on('change:position', function(cell){
 });
 
 
-graph.on('change', function(cell){
-  if(cell.changed.position != null){
-    return;
-  }
-  var cells = this.getCells();
-  cells = cells.filter(function(val) {
-    return val.id != cell.id;
-  });
-  var c = cell.clone();
-  c.attributes = cell.previousAttributes();
-  c.id = cell.previousAttributes().id;
-  cells.push(c);
-  undoStack.push({cells: cells.map(function(e){return e.toJSON(); })});
-});
+// graph.on('change', function(cell){
+//   if(cell.changed.position != null){
+//     return;
+//   }
+//   var cells = this.getCells();
+//   cells = cells.filter(function(val) {
+//     return val.id != cell.id;
+//   });
+//   var c = cell.clone();
+//   c.attributes = cell.previousAttributes();
+//   c.id = cell.previousAttributes().id;
+//   cells.push(c);
+//   undoStack.push({cells: cells.map(function(e){return e.toJSON(); })});
+// });
 
 
 graph.on('add', addOrRemoveHandler);
