@@ -1,23 +1,33 @@
 window.undoStack = []
 window.redoStack = []
 window.lastKnownState  = null
+var undo = function(){
+  var json = undoStack.pop();
+  if(json != null){
+    redoStack.push(json);
+    graph.fromJSON(json);
+  }
+}
+
+var redo = function(){
+  var json = redoStack.pop();
+  if(json != null){
+    undoStack.push(json);
+    graph.fromJSON(json);
+  }
+}
+
+$('.undo').on('click', undo);
+$('.redo').on('click', redo);
 $(document).on('keydown', function(event){
   if(event.ctrlKey && event.keyCode == 90) { 
-    var json = undoStack.pop();
-    if(json != null){
-      redoStack.push(json);
-      graph.fromJSON(json);
-    }
     event.preventDefault();
+    undo();
     return false;
   }
   if(event.ctrlKey && event.keyCode == 89) { 
     event.preventDefault(); 
-    var json = redoStack.pop();
-    if(json != null){
-      undoStack.push(json);
-      graph.fromJSON(json);
-    }
+    redo();
     return false;
   }
 })
@@ -34,22 +44,17 @@ var addOrRemoveHandler = function(cell){
   undoStack.push({cells: cells.filter(function(val) { return val.id != cell.id ;}).map(function(e){return e.toJSON(); })});
 }
 
-graph.on('change:position', function(cell){
-  if(this.debounced != null){
-    this.debounced.cancel();
-  }
-  this.debounced = _.debounce(function(){
-    var cells = this.getCells();
-    cells = cells.filter(function(val) {
-      return val.id != cell.id;
-    });
-    var c = cell.clone();
-    c.attributes = cell.previousAttributes();
-    cells.push(c);
-    undoStack.push({cells: cells.map(function(e){ return e.toJSON(); })});    
-  }, 100);
-  this.debounced();
-});
+graph.on('change:position', _.debounce(function(){
+  var cell = arguments[0];
+  var cells = this.getCells();
+  cells = cells.filter(function(val) {
+    return val.id != cell.id;
+  });
+  var c = cell.clone();
+  c.attributes = cell.previousAttributes();
+  cells.push(c);
+  undoStack.push({cells: cells.map(function(e){ return e.toJSON(); })});    
+}, 100));
 
 
 // graph.on('change', function(cell){
