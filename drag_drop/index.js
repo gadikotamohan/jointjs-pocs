@@ -51,7 +51,9 @@ var json = [{
     y: 100
   },
   attrs: {
-    text: {text:'Some node', fill:'#000000'}
+    text: {
+      text:'Some node'
+    }
   } 
 }]
 
@@ -64,7 +66,25 @@ var GraphView = function(leftDiv, rightDiv, toolKit){
   this.graph = new joint.dia.Graph;
   this.paper = new joint.dia.Paper({
     el: $(rightDiv),
-    model: that.graph
+    model: that.graph,
+    defaultLink: new joint.dia.Link({
+        attrs: { '.marker-target': { d: 'M 10 0 L 0 5 L 10 10 z' } }
+    }),
+    validateConnection: function(cellViewS, magnetS, cellViewT, magnetT, end, linkView) {
+        // Prevent linking from input ports.
+        if (magnetS && magnetS.getAttribute('port-group') === 'in') return false;
+        // Prevent linking from output ports to input ports within one element.
+        if (cellViewS === cellViewT) return false;
+        // Prevent linking to input ports.
+        return magnetT && magnetT.getAttribute('port-group') === 'in';
+    },
+    validateMagnet: function(cellView, magnet) {
+        // Note that this is the default behaviour. Just showing it here for reference.
+        // Disable linking interaction for magnets marked as passive (see below `.inPorts circle`).
+        return magnet.getAttribute('magnet') !== 'passive';
+    },
+    // Enable marking available cells & magnets
+    markAvailable: true
   });
   var addOrRemoveHandler = function(cell){
     var cells = this.getCells();
@@ -140,6 +160,8 @@ var GraphView = function(leftDiv, rightDiv, toolKit){
       // Simplify, try to use browser API for drag+drop
       if (x > target.left && x < target.left + that.paper.$el.width() && y > target.top && y < target.top + that.paper.$el.height()) {
         var s = flyShape.clone();
+        s.set('inPorts', ['newIn1']);
+        s.set('outPorts', ['newOut1']);
         s.position(x - target.left - offset.x, y - target.top - offset.y);
         that.graph.addCell(s);
       }
