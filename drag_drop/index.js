@@ -1,36 +1,30 @@
-window.undoStack = []
-window.redoStack = []
-window.lastKnownState  = null
-var undo = function(){
-  var json = undoStack.pop();
-  if(json != null){
-    redoStack.push(json);
-    graph.fromJSON(json);
+var CommandManager = function(){
+  this.index = -1;
+  this.stack = [];
+  this.undo = function(){
+    if(this.index > -1){
+      this.index = this.index - 1;
+    }
+    var result = this.stack[this.index];
+    return result;
   }
-}
+  this.redo = function(){
+    if(this.index+1 == this.stack.length){
+      return null;
+    }
+    this.index = this.index + 1;
+    var state = this.stack[this.index];
+    return state;
+  }
 
-var redo = function(){
-  var json = redoStack.pop();
-  if(json != null){
-    undoStack.push(json);
-    graph.fromJSON(json);
+  this.push = function(state){
+    this.index = this.index + 1;
+    this.stack.push(state)
   }
-}
-
-$('.undo').on('click', undo);
-$('.redo').on('click', redo);
-$(document).on('keydown', function(event){
-  if(event.ctrlKey && event.keyCode == 90) { 
-    event.preventDefault();
-    undo();
-    return false;
-  }
-  if(event.ctrlKey && event.keyCode == 89) { 
-    event.preventDefault(); 
-    redo();
-    return false;
-  }
-})
+};
+var cmdManager = new CommandManager();
+window.cmdManager = cmdManager;
+cmdManager.push([]);
 
 // Canvas where sape are dropped
 var graph = new joint.dia.Graph,
@@ -39,9 +33,10 @@ var graph = new joint.dia.Graph,
     model: graph
   });
 
+
 var addOrRemoveHandler = function(cell){
   var cells = this.getCells();
-  undoStack.push({cells: cells.filter(function(val) { return val.id != cell.id ;}).map(function(e){return e.toJSON(); })});
+  cmdManager.push(cells.map(function(e){ return e.toJSON(); }));
 }
 
 graph.on('change:position', _.debounce(function(){
@@ -53,7 +48,7 @@ graph.on('change:position', _.debounce(function(){
   var c = cell.clone();
   c.attributes = cell.previousAttributes();
   cells.push(c);
-  undoStack.push({cells: cells.map(function(e){ return e.toJSON(); })});    
+  cmdManager.push(cells.map(function(e){ return e.toJSON(); }));
 }, 100));
 
 
@@ -75,7 +70,7 @@ graph.on('change:position', _.debounce(function(){
 
 graph.on('add', addOrRemoveHandler);
 
-graph.on('remove', addOrRemoveHandler);
+// graph.on('remove', addOrRemoveHandler);
 
 // Canvas from which you take shapes
 var stencilGraph = new joint.dia.Graph,
@@ -150,6 +145,7 @@ stencilPaper.on('cell:pointerdown', function(cellView, e, x, y) {
       target = paper.$el.offset();
     
     // Dropped over paper ?
+    // Simplify, try to use browser API for drag+drop
     if (x > target.left && x < target.left + paper.$el.width() && y > target.top && y < target.top + paper.$el.height()) {
       var s = flyShape.clone();
       s.position(x - target.left - offset.x, y - target.top - offset.y);
@@ -160,3 +156,27 @@ stencilPaper.on('cell:pointerdown', function(cellView, e, x, y) {
     $('#flyPaper').remove();
   });
 });
+
+
+// $('.undo').on('click', undo);
+// $('.redo').on('click', redo);
+$(document).on('keydown', function(event){
+  if(event.ctrlKey && event.keyCode == 90) { 
+    event.preventDefault();
+    var cells = cmdManager.undo();
+    if(cells != null){
+      var state = {cells: cells};
+      graph.fromJSON(state);      
+    }
+    return false;
+  }
+  if(event.ctrlKey && event.keyCode == 89) { 
+    event.preventDefault(); 
+    var cells = cmdManager.redo();
+    if(cells != null){
+      var state = {cells: cells};
+      graph.fromJSON(state);      
+    }
+    return false;
+  }
+})
