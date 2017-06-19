@@ -35,26 +35,25 @@ var json = [{
   },
   attrs: {
     text: {
-      text: 'Node'
+      text: ''
     }
   }
-},
-{
+},{
   class: 'Circle',
-  id:'place1',
-  size: {
-    width: 100,
-    height: 100
-  },
   position: {
     x: 10,
-    y: 100
+    y: 30
+  },
+  size: {
+    width: 100,
+    height: 40
   },
   attrs: {
-    text: {text:'Some node', fill:'#000000'}
-  } 
+    text: {
+      text: ''
+    }
+  }
 }]
-
 var cmdManager = new CommandManager();
 cmdManager.push([]);
 
@@ -71,7 +70,7 @@ var addOrRemoveHandler = function(cell){
   cmdManager.push(cells.map(function(e){ return e.toJSON(); }));
 }
 
-graph.on('change', _.debounce(function(){
+graph.on('change:position', _.debounce(function(){
   var cell = arguments[0];
   var cells = this.getCells();
   cells = cells.filter(function(val) {
@@ -83,8 +82,26 @@ graph.on('change', _.debounce(function(){
   cmdManager.push(cells.map(function(e){ return e.toJSON(); }));
 }, 100));
 
+
+// graph.on('change', function(cell){
+//   if(cell.changed.position != null){
+//     return;
+//   }
+//   var cells = this.getCells();
+//   cells = cells.filter(function(val) {
+//     return val.id != cell.id;
+//   });
+//   var c = cell.clone();
+//   c.attributes = cell.previousAttributes();
+//   c.id = cell.previousAttributes().id;
+//   cells.push(c);
+//   undoStack.push({cells: cells.map(function(e){return e.toJSON(); })});
+// });
+
+
 graph.on('add', addOrRemoveHandler);
-graph.on('remove', addOrRemoveHandler);
+
+// graph.on('remove', addOrRemoveHandler);
 
 // Canvas from which you take shapes
 var stencilGraph = new joint.dia.Graph,
@@ -94,15 +111,80 @@ var stencilGraph = new joint.dia.Graph,
     interactive: false
   });
 
-json.forEach(function(item, index, json){
-  var klass = item.class;
-  delete item.class;
-  console.log("Klass -> "+klass);
-  console.log("JSON -> "+JSON.stringify(item));
-  var r1 = new joint.shapes.basic[klass](item);
-  stencilGraph.addCells([r1]);
-
+var r1 = new joint.shapes.devs.Model({
+  position: {
+    x: 15,
+    y: 10
+  },
+  size: {
+    width: 100,
+    height: 60
+  },
+  attrs: {
+    text: {
+      text: 'Rect1'
+    }
+  },
+  inPorts: ['in1','in2'],
+  outPorts: ['out'],
+  ports: {
+      groups: {
+          'in': {
+              attrs: {
+                  '.port-body': {
+                      fill: '#16A085',
+                      magnet: 'passive'
+                  }
+              }
+          },
+          'out': {
+              attrs: {
+                  '.port-body': {
+                      fill: '#E74C3C'
+                  }
+              }
+          }
+      }
+  }
 });
+
+var r2 = new joint.shapes.devs.Model({
+  position: {
+    x: 15,
+    y: 120
+  },
+  size: {
+    width: 100,
+    height: 60
+  },
+  attrs: {
+    text: {
+      text: 'Rect2'
+    }
+  },
+  inPorts: ['in1','in2'],
+  outPorts: ['out'],
+  ports: {
+      groups: {
+          'in': {
+              attrs: {
+                  '.port-body': {
+                      fill: '#16A085',
+                      magnet: 'passive'
+                  }
+              }
+          },
+          'out': {
+              attrs: {
+                  '.port-body': {
+                      fill: '#E74C3C'
+                  }
+              }
+          }
+      }
+  }
+});
+stencilGraph.addCells([r1, r2]);
 
 stencilPaper.on('cell:pointerdown', function(cellView, e, x, y) {
   $('body').append('<div id="flyPaper" style="position:fixed;z-index:100;opacity:.7;pointer-event:none;"></div>');
