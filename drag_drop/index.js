@@ -24,7 +24,7 @@ var CommandManager = function(){
 };
 
 var json = [{
-  class: 'Rect',
+  class: 'Model',
   position: {
     x: 10,
     y: 10
@@ -40,7 +40,7 @@ var json = [{
   }
 },
 {
-  class: 'Circle',
+  class: 'Model',
   id:'place1',
   size: {
     width: 100,
@@ -97,17 +97,20 @@ var GraphView = function(leftDiv, rightDiv, toolKit){
   toolKit.forEach(function(item, index, toolKit){
     var klass = item.class;
     delete item.class;
-    var r1 = new joint.shapes.basic[klass](item);
-    that.stencilGraph.addCells([r1]);
+    var r1 = new joint.shapes.devs[klass](item);
+    that.stencilGraph.addCell(r1);
   });
 
   this.stencilPaper.on('cell:pointerdown', function(cellView, e, x, y) {
+    var dim = cellView.el.getBBox();
     $('body').append('<div id="flyPaper" style="position:fixed;z-index:100;opacity:.7;pointer-event:none;"></div>');
     var flyGraph = new joint.dia.Graph,
       flyPaper = new joint.dia.Paper({
         el: $('#flyPaper'),
         model: flyGraph,
-        interactive: false
+        interactive: false,
+        width: dim.width,
+        height: dim.height
       }),
       flyShape = cellView.model.clone(),
       pos = cellView.model.position(),
@@ -168,4 +171,4 @@ var GraphView = function(leftDiv, rightDiv, toolKit){
   })
 }
 
-new GraphView("#toolbox", "#drawingPane", json);
+new GraphView("#toolbox_graph", "#drawingPane_graph", json);

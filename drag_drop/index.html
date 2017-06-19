@@ -2,25 +2,33 @@
 	<head>
 		<style>
 			#toolbox {
-			  background: #FFED0A;
 			  float: left;
 			  width: 200px;
 			}
-
-			#drawingPane {
-				float: left;
+			#toolbox_graph{
+			  background: #FFED0A;
+			}
+			#drawingPane_graph{
 			  background: #146DFF;
 			}
+			#drawingPane {
+				float: left;
+			}
 		</style>
+		<link rel="stylesheet" type="text/css" href="https://cdnjs.cloudflare.com/ajax/libs/jointjs/1.1.0/joint.css" />
 		<script src='https://cdnjs.cloudflare.com/ajax/libs/jquery/2.2.2/jquery.min.js'></script>
 		<script src='https://cdnjs.cloudflare.com/ajax/libs/lodash.js/3.10.1/lodash.min.js'></script>
 		<script src='https://cdnjs.cloudflare.com/ajax/libs/backbone.js/1.2.3/backbone-min.js'></script>
-		<script src='https://cdnjs.cloudflare.com/ajax/libs/jointjs/0.9.7/joint.min.js'></script>
+		<script src='https://cdnjs.cloudflare.com/ajax/libs/jointjs/1.1.0/joint.min.js'></script>
 	</head>
 	<body>
 		<div>
-			<div id="toolbox"></div>
-			<div id="drawingPane"></div>
+			<div id="toolbox">
+				<div id="toolbox_graph"></div>
+			</div>
+			<div id="drawingPane">
+				<div id="drawingPane_graph"></div>
+			</div>
 		</div>
 		<div>
 			<button class="undo"> undo </button>
